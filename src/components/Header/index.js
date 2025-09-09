@@ -1,4 +1,3 @@
-/* eslint-disable react/button-has-type */
 import {Link, withRouter} from 'react-router-dom'
 import {ImHome} from 'react-icons/im'
 import {FiLogOut} from 'react-icons/fi'
@@ -13,6 +12,7 @@ const Header = props => {
     Cookies.remove('jwt_token')
     history.replace('/login')
   }
+
   return (
     <nav className="nav-container">
       <ul className="header-ul-container">
@@ -28,8 +28,6 @@ const Header = props => {
           </Link>
           <Link className="link" to="/jobs">
             <h1 className="nav-text">Jobs</h1>
-
-            <button className="home-jobs-btn"> Jobs</button>
           </Link>
         </li>
         <li>

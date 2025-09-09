@@ -1,11 +1,11 @@
-// eslint-disable-next-line no-unused-vars
-import {Link, Redirect} from 'react-router-dom'
+import {Link, useHistory} from 'react-router-dom'
 import Header from '../Header'
 import './index.css'
 
-const Home = props => {
+const Home = () => {
+  const history = useHistory()
+
   const onRedirectToJobs = () => {
-    const {history} = props
     history.replace('/jobs')
   }
 

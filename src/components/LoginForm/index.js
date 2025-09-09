@@ -1,33 +1,32 @@
-import {Component} from 'react'
+// LoginForm.js
+import {useState} from 'react'
 import Cookies from 'js-cookie'
-import {Redirect} from 'react-router-dom'
+import {Redirect, useHistory} from 'react-router-dom'
 import './index.css'
 
 const websiteLogoInForm =
   'https://assets.ccbp.in/frontend/react-js/logo-img.png'
 
-class LoginForm extends Component {
-  state = {username: '', password: '', showSubmitError: false, errorMsg: ''}
+const LoginForm = () => {
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [showSubmitError, setShowSubmitError] = useState(false)
+  const [errorMsg, setErrorMsg] = useState('')
+  const history = useHistory()
 
-  onGetUsername = event => this.setState({username: event.target.value})
-
-  onGetPassword = event => this.setState({password: event.target.value})
-
-  onSubmitSuccess = jwtToken => {
-    const {history} = this.props
-
+  const onSubmitSuccess = jwtToken => {
     Cookies.set('jwt_token', jwtToken, {expires: 30, path: '/'})
-
     history.replace('/')
   }
 
-  onSubmitFailure = errorMsg => {
-    this.setState({showSubmitError: true, errorMsg})
+  // 🔥 parameter renamed to `msg`
+  const onSubmitFailure = msg => {
+    setShowSubmitError(true)
+    setErrorMsg(msg)
   }
 
-  onSubmitLoginForm = async event => {
+  const onSubmitLoginForm = async event => {
     event.preventDefault()
-    const {username, password} = this.state
     const userDetails = {username, password}
     const loginApiUrl = 'https://apis.ccbp.in/login'
     const options = {
@@ -36,64 +35,57 @@ class LoginForm extends Component {
     }
     const response = await fetch(loginApiUrl, options)
     const data = await response.json()
-    if (response.ok === true) {
-      this.onSubmitSuccess(data.jwt_token)
+    if (response.ok) {
+      onSubmitSuccess(data.jwt_token)
     } else {
-      this.onSubmitFailure(data.error_msg)
+      onSubmitFailure(data.error_msg) // msg passed here
     }
   }
 
-  render() {
-    const {username, password, showSubmitError, errorMsg} = this.state
-    const jwtToken = Cookies.get('jwt_token')
-    if (jwtToken !== undefined) {
-      return <Redirect to="/" />
-    }
-    return (
-      <div className="login-container">
-        <form
-          className="login-form-container"
-          onSubmit={this.onSubmitLoginForm}
-        >
-          <div className="form-logo-container">
-            <img src={websiteLogoInForm} alt="website logo" />
-          </div>
-          <label className="form-label" htmlFor="username">
-            USERNAME
-          </label>
-          <br />
-          <input
-            className="form-input"
-            type="text"
-            value={username}
-            onChange={this.onGetUsername}
-            placeholder="username"
-            id="username"
-          />
-          <br />
-          <br />
-          <label className="form-label" htmlFor="password">
-            PASSWORD
-          </label>
-          <br />
-          <input
-            className="form-input"
-            type="password"
-            value={password}
-            onChange={this.onGetPassword}
-            placeholder="password"
-            id="password"
-          />
-          <br />
-          <br />
-          <button className="form-submit-button" type="submit">
-            Login
-          </button>
-          {showSubmitError && <p className="error-message">*{errorMsg}</p>}
-        </form>
-      </div>
-    )
+  const jwtToken = Cookies.get('jwt_token')
+  if (jwtToken !== undefined) {
+    return <Redirect to="/" />
   }
+
+  return (
+    <div className="login-container">
+      <form className="login-form-container" onSubmit={onSubmitLoginForm}>
+        <div className="form-logo-container">
+          <img src={websiteLogoInForm} alt="website logo" />
+        </div>
+
+        <label className="form-label" htmlFor="username">
+          USERNAME
+        </label>
+        <input
+          className="form-input"
+          type="text"
+          value={username}
+          onChange={e => setUsername(e.target.value)}
+          placeholder="username"
+          id="username"
+        />
+
+        <label className="form-label" htmlFor="password">
+          PASSWORD
+        </label>
+        <input
+          className="form-input"
+          type="password"
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+          placeholder="password"
+          id="password"
+        />
+
+        <button className="form-submit-button" type="submit">
+          Login
+        </button>
+
+        {showSubmitError && <p className="error-message">*{errorMsg}</p>}
+      </form>
+    </div>
+  )
 }
 
 export default LoginForm
