@@ -1,4 +1,5 @@
-import {Component} from 'react'
+import {useState, useEffect} from 'react'
+import {useParams} from 'react-router-dom'
 import Cookies from 'js-cookie'
 import {MdLocationOn} from 'react-icons/md'
 import {AiFillStar} from 'react-icons/ai'
@@ -15,25 +16,15 @@ const apiStatusConstants = {
   inProgress: 'IN_PROGRESS',
 }
 
-class AboutJobItem extends Component {
-  state = {
-    jobDataDetails: [],
-    similarJobsData: [],
-    apiStatus: apiStatusConstants.initial,
-  }
+const AboutJobItem = () => {
+  const {id} = useParams()
 
-  componentDidMount() {
-    this.getJobData()
-  }
+  const [jobDataDetails, setJobDataDetails] = useState([])
+  const [similarJobsData, setSimilarJobsData] = useState([])
+  const [apiStatus, setApiStatus] = useState(apiStatusConstants.initial)
 
-  // eslint-disable-next-line no-unused-vars
-  getJobData = async props => {
-    const {match} = this.props
-    const {params} = match
-    const {id} = params
-    this.setState({
-      apiStatus: apiStatusConstants.inProgress,
-    })
+  const getJobData = async () => {
+    setApiStatus(apiStatusConstants.inProgress)
     const jwtToken = Cookies.get('jwt_token')
     const jobDetailsApiUrl = `https://apis.ccbp.in/jobs/${id}`
     const optionsJobData = {
@@ -41,8 +32,9 @@ class AboutJobItem extends Component {
       method: 'GET',
     }
     const responseJobData = await fetch(jobDetailsApiUrl, optionsJobData)
-    if (responseJobData.ok === true) {
+    if (responseJobData.ok) {
       const fetchedJobData = await responseJobData.json()
+
       const updatedJobDetailsData = [fetchedJobData.job_details].map(
         eachItem => ({
           companyLogoUrl: eachItem.company_logo_url,
@@ -75,27 +67,26 @@ class AboutJobItem extends Component {
           title: eachItem.title,
         }),
       )
-      this.setState({
-        jobDataDetails: updatedJobDetailsData,
-        similarJobsData: updatedSimilarJobDetails,
-        apiStatus: apiStatusConstants.success,
-      })
+
+      setJobDataDetails(updatedJobDetailsData)
+      setSimilarJobsData(updatedSimilarJobDetails)
+      setApiStatus(apiStatusConstants.success)
     } else {
-      this.setState({
-        apiStatus: apiStatusConstants.failure,
-      })
+      setApiStatus(apiStatusConstants.failure)
     }
   }
 
-  renderJobDetailsSuccessView = () => {
-    const {jobDataDetails, similarJobsData} = this.state
+  useEffect(() => {
+    getJobData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id])
+
+  const renderJobDetailsSuccessView = () => {
     if (jobDataDetails.length >= 1) {
       const {
         companyLogoUrl,
         companyWebsiteUrl,
         employmentType,
-        // eslint-disable-next-line no-unused-vars
-        id,
         jobDescription,
         lifeAtCompany,
         location,
@@ -104,6 +95,7 @@ class AboutJobItem extends Component {
         skills,
         title,
       } = jobDataDetails[0]
+
       return (
         <>
           <div className="job-item-container">
@@ -184,11 +176,7 @@ class AboutJobItem extends Component {
     return null
   }
 
-  onRetryJobDetailsAgain = () => {
-    this.getJobData()
-  }
-
-  renderJobFailureView = () => (
+  const renderJobFailureView = () => (
     <div className="job-details-failure-view">
       <img
         src="https://assets.ccbp.in/frontend/react-js/failure-img.png"
@@ -200,7 +188,7 @@ class AboutJobItem extends Component {
         <button
           className="failure-jod-details-btn"
           type="button"
-          onClick={this.onRetryJobDetailsAgain}
+          onClick={getJobData}
         >
           retry
         </button>
@@ -208,37 +196,31 @@ class AboutJobItem extends Component {
     </div>
   )
 
-  renderJobLoadingView = () => (
+  const renderJobLoadingView = () => (
     <div className="job-details-loader">
       <Loader type="ThreeDots" color="#0b69ff" height="50" width="50" />
     </div>
   )
 
-  renderJobDetails = () => {
-    const {apiStatus} = this.state
-
+  const renderJobDetails = () => {
     switch (apiStatus) {
       case apiStatusConstants.success:
-        return this.renderJobDetailsSuccessView()
+        return renderJobDetailsSuccessView()
       case apiStatusConstants.failure:
-        return this.renderJobFailureView()
+        return renderJobFailureView()
       case apiStatusConstants.inProgress:
-        return this.renderJobLoadingView()
+        return renderJobLoadingView()
       default:
         return null
     }
   }
 
-  render() {
-    return (
-      <>
-        <Header />
-        <div className="job-details-view-container">
-          {this.renderJobDetails()}
-        </div>
-      </>
-    )
-  }
+  return (
+    <>
+      <Header />
+      <div className="job-details-view-container">{renderJobDetails()}</div>
+    </>
+  )
 }
 
 export default AboutJobItem
